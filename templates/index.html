@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF Book Reader</title>
+    <style>
+        body {
+            background-color: #121212;
+            color: #d4edda;
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+        button {
+            background-color: #28a745;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            margin: 10px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        #textContainer {
+            max-width: 80%;
+            margin: auto;
+            padding: 20px;
+            background-color: #2d2d2d;
+            border-radius: 10px;
+            text-align: left;
+            font-size: 18px;
+            line-height: 1.5;
+        }
+        .highlight {
+            background-color: yellow;
+            color: black;
+        }
+        input[type='range'] {
+            width: 200px;
+            margin: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Upload a PDF and Listen</h2>
+    <link rel="icon" href="favicon.png" type="image/png">
+
+    <input type="file" id="pdfInput">
+    <button onclick="uploadPDF()">Upload & Read</button>
+    
+    <br><br>
+    <audio id="audioPlayer" controls></audio>
+    <br>
+    
+    <button onclick="skipTime(-60)">-1 min</button>
+    <button onclick="skipTime(-300)">-5 min</button>
+    <button onclick="skipTime(60)">+1 min</button>
+    <button onclick="skipTime(300)">+5 min</button>
+    <br>
+    
+    <label for="speedControl">Speed:</label>
+    <input type="range" id="speedControl" min="0.5" max="2.5" step="0.1" value="1" onchange="updateSpeed(this.value)">
+    <span id="speedValue">1.0x</span>
+    
+    <br>
+    
+    <div id="textContainer"></div>
+
+    <script>
+    let words = [];
+    let audioPlayer = document.getElementById("audioPlayer");
+    let currentWordIndex = 0;
+    let timePerWord = 0.5; // Base speed
+
+    function uploadPDF() {
+        let fileInput = document.getElementById("pdfInput");
+        if (!fileInput.files.length) {
+            alert("Please select a PDF file.");
+            return;
+        }
+
+        let formData = new FormData();
+        formData.append("file", fileInput.files[0]);
+
+        fetch("http://127.0.0.1:5000/upload", {
+            method: "POST",
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.audio_file) {
+                audioPlayer.src = `http://127.0.0.1:5000/audio/${data.audio_file}`;
+                displayText(data.text);
+                audioPlayer.play();
+                trackProgress();
+            } else {
+                alert("Error processing file.");
+            }
+        })
+        .catch(error => console.error("Error:", error));
+    }
+
+    function displayText(text) {
+        let textContainer = document.getElementById("textContainer");
+        words = text.split(" ");
+        textContainer.innerHTML = words.map((word, index) => `<span id='word${index}' onclick='seekAudio(${index})'>${word} </span>`).join(" ");
+    }
+
+    function seekAudio(index) {
+        audioPlayer.currentTime = index * timePerWord;
+        highlightWord(index);
+    }
+
+    function highlightWord(index) {
+        document.querySelectorAll("#textContainer span").forEach(span => span.classList.remove("highlight"));
+        let wordElement = document.getElementById(`word${index}`);
+        if (wordElement) wordElement.classList.add("highlight");
+    }
+
+    function trackProgress() {
+        audioPlayer.addEventListener("timeupdate", () => {
+            let index = Math.floor(audioPlayer.currentTime / timePerWord);
+            if (index !== currentWordIndex) {
+                currentWordIndex = index;
+                highlightWord(index);
+            }
+        });
+    }
+
+    function skipTime(seconds) {
+        audioPlayer.currentTime += seconds;
+    }
+
+    function updateSpeed(value) {
+        let speed = parseFloat(value);
+        audioPlayer.playbackRate = speed;
+        document.getElementById("speedValue").innerText = speed + "x";
+        timePerWord = 0.5 / speed; // Adjust time per word dynamically
+    }
+    </script>
+</body>
+</html>
