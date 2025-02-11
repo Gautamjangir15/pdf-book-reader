@@ -87,14 +87,14 @@
         let formData = new FormData();
         formData.append("file", fileInput.files[0]);
 
-        fetch("http://127.0.0.1:5000/upload", {
+        fetch("https://pdf-book-reader.onrender.com/upload", {
             method: "POST",
             body: formData
         })
         .then(response => response.json())
         .then(data => {
             if (data.audio_file) {
-                audioPlayer.src = `http://127.0.0.1:5000/audio/${data.audio_file}`;
+                audioPlayer.src = `https://pdf-book-reader.onrender.com/audio/${data.audio_file}`;
                 displayText(data.text);
                 audioPlayer.play();
                 trackProgress();
