@@ -2,7 +2,7 @@ from flask import Flask, request, send_file, jsonify
 from flask_cors import CORS
 from gtts import gTTS
 from io import BytesIO
-import os
+
 app = Flask(__name__)
 CORS(app)
 
@@ -29,5 +29,16 @@ def tts():
         return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 5000))  # Get the correct port from Render
-    app.run(host="0.0.0.0", port=port)
+    from flask import Flask
+
+app = Flask(__name__)
+
+@app.route('/')
+def home():
+    return "Flask app is working!"
+
+if __name__ == '__main__':
+    import os
+    port = int(os.environ.get("PORT", 5000))  
+    app.run(host='0.0.0.0', port=port)
+
