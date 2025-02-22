@@ -1,11 +1,13 @@
-from flask import Flask, request, send_file, jsonify
+from flask import Flask, request, send_file, jsonify, render_template
 from flask_cors import CORS
 from gtts import gTTS
 from io import BytesIO
-
-app = Flask(__name__)
+import os
+app = Flask(__name__, template_folder='templates')  # Specify folders
 CORS(app)
-
+@app.route('/')
+def home():
+    return render_template("index.html")
 @app.route('/tts', methods=['POST'])
 def tts():
     try:
@@ -30,5 +32,5 @@ def tts():
 
 if __name__ == '__main__':
     import os
-    port = int(os.environ.get("PORT", 5000))  # Railway provides a dynamic port
+    port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=True)
