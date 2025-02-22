@@ -8,6 +8,12 @@ CORS(app)
 @app.route('/')
 def home():
     return render_template("index.html")
+    
+@app.route('/favicon.ico')
+def favicon():
+    from flask import send_from_directory
+    return send_from_directory('templates', 'favicon.ico', mimetype='image/vnd.microsoft.icon')
+    
 @app.route('/tts', methods=['POST'])
 def tts():
     try:
