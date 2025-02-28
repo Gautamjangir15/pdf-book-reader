@@ -271,7 +271,15 @@
     
         const pdfjsLib = window['pdfjs-dist/build/pdf'];
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-    
+        audioPlayer.addEventListener("ended", function () {
+        if (currentPage < pdfDoc.numPages) {
+            currentPage++;
+            document.getElementById("pageInput").value = currentPage;
+            renderPage(currentPage);
+            setTimeout(playAudio, 1000); // Wait 1 sec before starting new audio
+            }
+        });
+
         document.getElementById('pdfUpload').addEventListener('change', function (e) {
             clearCanvas();
             const file = e.target.files[0];
@@ -371,8 +379,10 @@
                     .then(blob => {
                         showLoading(false); // Hide loading indicator
                         const url = URL.createObjectURL(blob);
+                        let currentSpeed = audioPlayer.playbackRate || 1; // Store speed before changing audio
                         audioPlayer.src = url;
                         audioPlayer.play();
+                        audioPlayer.playbackRate = currentSpeed; // Restore speed after setting audio source
                     })
                     .catch(error => {
                         showLoading(false);
